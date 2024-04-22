@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+# Warning: This function creates a lots of files
 
 def get_sudoku_tiles(filename : str, save : bool = False, name : int = 6) -> None:
     '''Gets sudoku tiles from image.
@@ -19,7 +20,7 @@ def get_sudoku_tiles(filename : str, save : bool = False, name : int = 6) -> Non
             k += 1
 
 def main():
-    get_sudoku_tiles("Sudoku.png",True)
+    get_sudoku_tiles("Sudoku.png")
 
 if __name__ == "__main__":
     main()
