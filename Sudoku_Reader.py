@@ -1,7 +1,7 @@
 import cv2
 import pytesseract
 import numpy as np
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
 import pandas as pd
 
 def camera_setting(setting: bool) -> bool:
@@ -36,17 +36,17 @@ class Reader:
     '''This class can read picture from file or capture a video. Then it tries to find contours of sudoku grid and apply linear
     tranformation. With that this class isolates the sudoku from image and applies filters for better clairity. 
     '''
-    def __init__(self) -> None:
-        self.height : int = 648
-        self.width : int = 648
-        self.vid : cv2.VideoCapture = cv2.VideoCapture(0)
+    def __init__(that) -> None:
+        that.height : int = 648
+        that.width : int = 648
+        that.vid : cv2.VideoCapture = cv2.VideoCapture(0)
         
-        self.img : np.ndarray = np.zeros((self.width, self.height))
-        self.contourImg : np.ndarray
-        self.imgGray : np.ndarray 
-        self.finalImg : np.ndarray
+        that.img : np.ndarray = np.zeros((that.width, that.height))
+        that.contourImg : np.ndarray
+        that.imgGray : np.ndarray 
+        that.finalImg : np.ndarray
 
-        self.file : bool
+        that.file : bool
 
         cv2.namedWindow('image')
         cv2.createTrackbar('Camera','image',0 ,1 ,camera_setting)
@@ -191,10 +191,10 @@ class Reader:
 
 
 def main() -> None:
-    red : Reader = Reader()
+    red: Reader = Reader()
     red.readImage('shapes.jpg')
     red.show()
-    file : bool = red.getFile()
+    file: bool = red.getFile()
 
 if __name__ == '__main__':
     main()
