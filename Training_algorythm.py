@@ -1,19 +1,38 @@
-from keras.src.legacy.preprocessing.image import ImageDataGenerator
-from keras.preprocessing import image 
-from keras.optimizers import RMSprop
-from keras.datasets import mnist
+import pickle
 import tensorflow as tf
-import cv2
-import os
-import numpy as np
+from keras.utils import to_categorical
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Activation, Conv2D, Flatten, MaxPooling2D 
 
-mnist.load_data()
-train = ImageDataGenerator(rescale = 1/255)
-validation = ImageDataGenerator(rescale = 1/255)
-train_dataset = train.flow_from_directory('Training/',
-                                          batch_size=30,
-                                          class_mode='binary')
-validation_dataset = validation.flow_from_directory('Validation/',
-                                          batch_size=30,
-                                          class_mode='binary')
-print(train_dataset)
+X = pickle.load(open("X.pickle", "rb"))
+y = pickle.load(open("y.pickle", "rb"))
+
+X = X / 255.0
+
+
+num_classes = 10
+y = to_categorical(y, num_classes=num_classes)
+print(y.shape)
+
+model = Sequential()
+
+model.add(Conv2D(32, (5, 5), input_shape=X.shape[1:]))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+
+model.add(Conv2D(64, (3, 3)))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+
+model.add(Flatten())
+model.add(Dense(128))
+model.add(Activation('relu'))
+
+model.add(Dense(10))
+model.add(Activation('softmax'))
+
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+model.fit(X, y, batch_size=32, epochs=10, validation_split=0.1)
+
+model.save("sudoku_solver.h5")

@@ -202,65 +202,69 @@ class SudokuIP(Sudoku):
             raise ValueError
         if self.unknown == 0:
             return self.puzzle
-        problem = plp.LpProblem('')
-        grid_vars = plp.LpVariable.dicts("grid_value", (range(9),range(9),range(1,10)), cat='Binary') 
-        objective = plp.lpSum(0)
-        problem.setObjective(objective)
-        for row in range(9):
-            for col in range(9):
-                problem.addConstraint(plp.LpConstraint(e=plp.lpSum([grid_vars[row][col][value] for value in range(1, 10)]),
-                                        sense=plp.LpConstraintEQ, rhs=1, name=f"constraint_sum_{row}_{col}"))
-    # Constraint to ensure that values from 1 to 9 is filled only once in a row        
-        for row in range(9):
-            for value in range(1, 10):
-                problem.addConstraint(plp.LpConstraint(e=plp.lpSum([grid_vars[row][col][value]*value  for col in range(9)]),
-                                            sense=plp.LpConstraintEQ, rhs=value, name=f"constraint_uniq_row_{row}_{value}"))
+        Boxes = [
+            [(3 * i + k + 1, 3 * j + l + 1) for k in range(3) for l in range(3)]
+            for i in range(3)
+            for j in range(3)
+        ]
 
-        # Constraint to ensure that values from 1 to 9 is filled only once in a column        
-        for col in range(9):
-            for value in range(1, 10):
-                problem.addConstraint(plp.LpConstraint(e=plp.lpSum([grid_vars[row][col][value]*value  for row in range(9)]),
-                                            sense=plp.LpConstraintEQ, rhs=value, name=f"constraint_uniq_col_{col}_{value}"))
+        # The prob variable is created to contain the problem data
+        prob = plp.LpProblem("Sudoku Problem")
 
+        # The decision variables are created
+        choices = plp.LpVariable.dicts("Choice", (range(1,10), range(1,10), range(1,10)), cat="Binary")
 
-        # Constraint to ensure that values from 1 to 9 is filled only once in the 3x3 grid       
-        for grid in range(9):
-            grid_row  = int(grid/3)
-            grid_col  = int(grid%3)
+        # We do not define an objective function since none is needed
 
-        for value in range(1, 10):
-            problem.addConstraint(plp.LpConstraint(e=plp.lpSum([grid_vars[grid_row*3+row][grid_col*3+col][value]*value  for col in range(0,3) for row in range(0,3)]),
-                                        sense=plp.LpConstraintEQ, rhs=value, name=f"constraint_uniq_grid_{grid}_{value}"))
-        for row in range(9):
-            for col in range(9):
-                if(self.puzzle[row,col] != 0):
-                    problem.addConstraint(plp.LpConstraint(e=plp.lpSum([grid_vars[row][col][value]*value  for value in range(1, 10)]), 
-                                                    sense=plp.LpConstraintEQ, 
-                                                    rhs=self.puzzle[row,col],
-                                                    name=f"constraint_prefilled_{row}_{col}"))
-        problem.solve()
+        # A constraint ensuring that only one value can be in each square is created
+        for r in range(1,10):
+            for c in range(1,10):
+                prob += plp.lpSum([choices[v][r][c] for v in range(1,10)]) == 1
 
-        if plp.LpStatus[problem.status] == 'Optimal':
-            solution = [[0 for col in range(9)] for row in range(9)]
-            grid_list = []
+        # The row, column and box constraints are added for each value
+        for v in range(1,10):
+            for r in range(1,10):
+                prob += plp.lpSum([choices[v][r][c] for c in range(1,10)]) == 1
+
+            for c in range(1,10):
+                prob += plp.lpSum([choices[v][r][c] for r in range(1,10)]) == 1
+
+            for b in Boxes:
+                prob += plp.lpSum([choices[v][r][c] for (r, c) in b]) == 1
+
+        k = 0
+        for i in self.puzzle:
+            for j in i:
+                
+                col: int = k%9 + 1
+                row: int = int(np.floor(k/9) + 1)
+                if 0 == j:
+                    k += 1
+                    continue
+                prob += choices[j][row][col] == 1
+                k += 1
+        prob.solve()
+
+        if plp.LpStatus[prob.status] == 'Optimal':
+            solution: list[list[int]] = [[0 for col in range(9)] for row in range(9)]
             for row in range(9):
                 for col in range(9):
                     for value in range(1, 10):
-                        if plp.value(grid_vars[row][col][value]):
+                        if plp.value(choices[value][row+1][col+1]):
                             solution[row][col] = value 
             return np.array(solution)
         return False
 
 def main() -> None:
-    puzzle: NDArray = np.array([0,1,3,0,5,7,0,0,0,
-                                4,7,6,1,0,2,9,8,5,
-                                2,9,5,8,4,6,7,3,1,
-                                0,3,7,0,8,1,4,5,0,
-                                0,5,8,0,6,0,2,0,3,
-                                1,2,0,5,9,3,8,6,7,
-                                5,8,1,0,7,9,3,0,6,
-                                0,4,9,6,2,5,1,7,0,
-                                0,0,2,3,1,8,0,9,4])
+    puzzle: NDArray = np.array([0,0,2,7,0,4,1,0,0,
+                                6,0,0,0,3,0,0,0,5,
+                                0,8,4,0,0,0,3,9,0,
+                                0,0,6,0,0,0,7,0,0,
+                                0,2,0,9,0,6,0,5,0,
+                                0,0,9,0,0,0,6,0,0,
+                                0,6,8,0,0,0,2,7,0,
+                                3,0,0,0,8,0,0,0,1,
+                                0,0,5,6,0,3,9,0,0])
     sudoku: SudokuLP = SudokuLP(puzzle)
     print(sudoku)
     solved: SudokuLP = SudokuLP(sudoku.solve())
