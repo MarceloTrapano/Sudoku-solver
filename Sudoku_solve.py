@@ -1,10 +1,3 @@
-"""c = np.array([1, 1])
-b_eq = np.array([11,7,4])
-A_eq = np.array([[1,1],[1,0],[0,1]])
-
-res = linprog(c, A_eq=A_eq, b_eq=b_eq, method='highs')
-print(res['x'])
-"""
 from scipy.optimize import linprog
 from numpy.typing import NDArray
 import numpy as np
@@ -188,8 +181,7 @@ class SudokuLP(Sudoku):
                             b -= n
                         x += 1
                     A_eq = np.vstack((A_eq, equation))
-                    b_eq = np.append(b_eq, b)  
-        #print(f"{A_eq=} \n {b_eq=}")    
+                    b_eq = np.append(b_eq, b)    
         res: OptimizeResult = linprog(np.zeros(self.unknown), A_eq=A_eq, b_eq=b_eq, method='highs', bounds=(1,9))
         puzzle = np.copy(self.puzzle)
         print(res)
@@ -208,20 +200,16 @@ class SudokuIP(Sudoku):
             for j in range(3)
         ]
 
-        # The prob variable is created to contain the problem data
+
         prob = plp.LpProblem("Sudoku Problem")
 
-        # The decision variables are created
         choices = plp.LpVariable.dicts("Choice", (range(1,10), range(1,10), range(1,10)), cat="Binary")
 
-        # We do not define an objective function since none is needed
 
-        # A constraint ensuring that only one value can be in each square is created
         for r in range(1,10):
             for c in range(1,10):
                 prob += plp.lpSum([choices[v][r][c] for v in range(1,10)]) == 1
 
-        # The row, column and box constraints are added for each value
         for v in range(1,10):
             for r in range(1,10):
                 prob += plp.lpSum([choices[v][r][c] for c in range(1,10)]) == 1

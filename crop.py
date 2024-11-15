@@ -21,13 +21,14 @@ def get_sudoku_tiles(filename : str, save : bool = False, name : int = 6) -> Non
             if save:
                 cv2.imwrite("{}_{}.png".format(name,k),cropImg)
             k += 1
-def get_sudoku_tiles_predefined(filename : str, save : bool = False, predef = NDArray[np.int64], rep: int = 1) -> None:
-    '''Gets sudoku tiles from image.
+def get_sudoku_tiles_predefined(filename : str, predef: NDArray[np.int64], save : bool = False, rep: int = 1) -> None:
+    '''Gets sudoku tiles from image and saves them into correct directory.
 
     Args:
         filename (str): Name of file with type from which function will get tiles.
         save (bool, optional): Whether to save tiles to file. Defaults to False.
-        name (int, optional): Which iteration of tiles it is. Defaults at 6.
+        predef (NDArray[np.int64]): Predefined sudoku.
+        rep (int): The number of scans.
     '''
     DELTA: int = 10
     Read: Reader = Reader()
@@ -45,15 +46,15 @@ def get_sudoku_tiles_predefined(filename : str, save : bool = False, predef = ND
 
 def main():
     predef: NDArray[np.int64] = np.array([[0,0,0,0,1,9,0,5,0],
-                                                        [0,6,0,0,7,0,0,1,3],
-                                                        [0,0,0,2,0,0,0,0,7],
-                                                        [3,0,6,0,0,1,8,4,0],
-                                                        [4,0,0,0,0,0,0,0,9],
-                                                        [0,8,2,9,0,0,3,0,6],
-                                                        [2,0,0,0,0,6,0,0,0],
-                                                        [6,1,0,0,5,0,0,3,0],
-                                                        [0,7,0,8,3,0,0,0,0]])
-    get_sudoku_tiles_predefined("Sudoku.png", save=True, predef=predef, rep=1000)
+                                          [0,6,0,0,7,0,0,1,3],
+                                          [0,0,0,2,0,0,0,0,7],
+                                          [3,0,6,0,0,1,8,4,0],
+                                          [4,0,0,0,0,0,0,0,9],
+                                          [0,8,2,9,0,0,3,0,6],
+                                          [2,0,0,0,0,6,0,0,0],
+                                          [6,1,0,0,5,0,0,3,0],
+                                          [0,7,0,8,3,0,0,0,0]])
+    get_sudoku_tiles_predefined("Sudoku.png",predef, save=True, rep=100)
 
 if __name__ == "__main__":
     main()

@@ -127,8 +127,7 @@ class Reader:
     def show(self) -> None:
         '''Show result of reader class.'''
         cv2.namedWindow('image')
-        cv2.namedWindow('image1')
-        cv2.namedWindow('image2')
+
         self.capture()
         kernel : np.ndarray = np.ones((1,1))
         empty = []
@@ -154,11 +153,7 @@ class Reader:
             if contourCheck:
                 kernel = np.ones((2,2))
                 self.finalImg = self.contourImg
-                #self.finalImg = cv2.erode(self.contourImg,kernel)
                 kernel = np.ones((1,1))
-                #self.finalImg = cv2.dilate(self.finalImg,kernel)
-                #self.finalImg = cv2.blur(self.finalImg,(3,3))
-                #_, self.finalImg = cv2.threshold(self.finalImg,127,255,cv2.THRESH_BINARY)
                 if cv2.countNonZero(self.finalImg) < 380000:
                     if 15 < i:
                         empty.append(self.finalImg)
@@ -179,6 +174,7 @@ class Reader:
         correct = cv2.morphologyEx(correct, cv2.MORPH_CLOSE, kernel)
         _, correct = cv2.threshold(correct,150,255,cv2.THRESH_BINARY)
         cv2.imwrite("Sudoku.png", correct)
+        self.vid.release()
         cv2.destroyAllWindows()
     def getFile(self) -> bool:
         '''Check if file was saved.
