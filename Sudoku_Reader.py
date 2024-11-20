@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from typing import Any, List, String
+from typing import Any, List
 from numpy.typing import NDArray
 # TODO: Popraw typehinty i docstringi
 def camera_setting(setting: bool) -> bool:
