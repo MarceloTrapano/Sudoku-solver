@@ -1,9 +1,8 @@
 import cv2
-import pytesseract
 import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
-
+from typing import Any, List, String
+from numpy.typing import NDArray
+# TODO: Popraw typehinty i docstringi
 def camera_setting(setting: bool) -> bool:
     '''Information about camera status.
 
@@ -33,8 +32,8 @@ def threshold_setting(setting: int) -> int:
     
 
 class Reader:
-    '''This class can read picture from file or capture a video. Then it tries to find contours of sudoku grid and apply linear
-    tranformation. With that this class isolates the sudoku from image and applies filters for better clairity. 
+    '''Read picture from file or capture a video. Find contours of sudoku grid and apply linear
+    tranformation. Then isolate the sudoku from image and apply filters for better clairity. 
     '''
     HEIGHT: int = 648
     WIDTH: int = 648
@@ -53,7 +52,8 @@ class Reader:
         '''Find contours of sudoku grid and apply linear tranformation. 
         
         Returns:
-            bool: If it found any contour.'''
+            bool: If it found any contour.
+        '''
         contours: cv2.Sequence[np.ndarray]
         biggest: np.ndarray
         contours, _ = cv2.findContours(self.finalImg, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -61,7 +61,7 @@ class Reader:
         if biggest.size != 0:
             biggest = self.reorder(biggest)
             cv2.drawContours(self.finalImg, biggest, -1, (0,0,255),20)
-            cv2.drawContours(self.finalImg, contours, -1, (0,0,255),10)
+            cv2.drawContours(self.finalImg, contours, -1, (0,0,255),10) # TODO: Wywal jak się da
             wrappoints1 : np.ndarray = np.float32(biggest)
             wrappoints2 : np.ndarray = np.float32([[0, 0],[self.WIDTH, 0],[0, self.HEIGHT],[self.WIDTH, self.HEIGHT]])
             matrix : np.ndarray = cv2.getPerspectiveTransform(wrappoints1,wrappoints2)
@@ -69,7 +69,7 @@ class Reader:
             self.contourImg = cv2.resize(self.contourImg, (self.WIDTH,self.HEIGHT))
             self.contourImg = cv2.cvtColor(self.contourImg, cv2.COLOR_BGR2GRAY)
             self.contourImg = cv2.adaptiveThreshold(self.contourImg, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,7,2)
-            kernel = np.ones((3,3),np.uint8)
+            kernel: NDArray[np.uint8] = np.ones((3,3),np.uint8)
             self.contourImg = cv2.morphologyEx(self.contourImg, cv2.MORPH_OPEN, kernel)
             return True
         return False
@@ -82,14 +82,15 @@ class Reader:
             points (ndarray): Vertices of rectangle.
 
         Returns:
-            ndarray: Correct points order.'''
+            ndarray: Correct points order.
+        '''
         points = points.reshape((4, 2))
-        newPoints : np.ndarray = np.zeros((4, 1, 2), dtype=np.int32)
-        add : float =  points.sum(1)
+        newPoints: np.ndarray = np.zeros((4, 1, 2), dtype=np.int32)
+        add: float =  points.sum(1)
 
         newPoints[0] = points[np.argmin(add)]
         newPoints[3] = points[np.argmax(add)]
-        diff : np.ndarray = np.diff(points, axis=1)
+        diff: np.ndarray = np.diff(points, axis=1)
 
         newPoints[1] = points[np.argmin(diff)]
         newPoints[2] = points[np.argmax(diff)]
@@ -104,6 +105,7 @@ class Reader:
         Returns:
             (ndarray): Biggest contour and its area.
         '''
+        # TODO: Opisz
         biggest : np.ndarray= np.array([])
         max_area : float = 0
         for i in contours:
@@ -117,11 +119,12 @@ class Reader:
         return biggest, max_area
 
     def capture(self) -> None:
+        '''Capture video from camera with filters.
         '''
-        Capture video from camera with filters.'''
         _, self.finalImg = self.vid.read()
         self.finalImg = cv2.resize(self.finalImg, (self.WIDTH, self.HEIGHT), fx = 0, fy = 0)
         self.finalImg = cv2.cvtColor(self.finalImg, cv2.COLOR_BGR2GRAY)
+        # TODO: Sprawdź czy zwykły blur nie będzie lepszy
         self.finalImg = cv2.GaussianBlur(self.finalImg, (5, 5), 1)
 
     def show(self) -> None:
@@ -130,7 +133,7 @@ class Reader:
 
         self.capture()
         kernel : np.ndarray = np.ones((1,1))
-        empty = []
+        empty = [] # TODO: Dlaczego to się nazywa empty?
         i = 0
         while True:
             
@@ -151,7 +154,6 @@ class Reader:
             contourCheck : bool = self.findContour()
             
             if contourCheck:
-                kernel = np.ones((2,2))
                 self.finalImg = self.contourImg
                 kernel = np.ones((1,1))
                 if cv2.countNonZero(self.finalImg) < 380000:
@@ -159,17 +161,17 @@ class Reader:
                         empty.append(self.finalImg)
                     i += 1
                     if 20 == i:
-                        dst = empty[0]
+                        dst: NDArray[np.float64] = empty[0]
                         for j in range(len(empty)):
                             if j == 0:
                                 pass
                             else:
-                                alpha = 1.0/(j + 1)
-                                beta = 1.0 - alpha
+                                alpha: float = 1.0/(j + 1)
+                                beta: float = 1.0 - alpha
                                 dst = cv2.addWeighted(empty[j], alpha, dst, beta, 0.0)
                         self.file = cv2.imwrite("Sudoku.png", dst)
                         break
-        correct = cv2.imread("Sudoku.png", cv2.IMREAD_GRAYSCALE)
+        correct: NDArray[np.float64] = cv2.imread("Sudoku.png", cv2.IMREAD_GRAYSCALE)
         correct = cv2.medianBlur(correct, 1)
         correct = cv2.morphologyEx(correct, cv2.MORPH_CLOSE, kernel)
         _, correct = cv2.threshold(correct,150,255,cv2.THRESH_BINARY)

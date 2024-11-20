@@ -5,8 +5,9 @@ from Controller import Controller
 
 class App(ctk.CTk):
     """Graphical user interface for sudoku solver. It allows to solve sudoku with various methods. 
-        You can solve problem on your own or with some help. Project includes scanning sudoku grid with webcam and
-        provides estimated time for solution."""
+    You can solve problem on your own or with some help. Project includes scanning sudoku grid with webcam and
+    provides estimated time for solution.
+    """
     def __init__(self) -> None:
         super().__init__()
         #Create window

@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
 import os
 import random
 import pickle
@@ -29,9 +28,6 @@ for features, label in training_data:
     y.append(label)
 
 X = np.array(X).reshape(-1, IMG_SIZE, IMG_SIZE, 1)
-print(X[0].shape)
-plt.imshow(X[0])
-plt.show()
 
 y = np.array(y)
 print(y.shape)

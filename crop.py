@@ -19,7 +19,7 @@ def get_sudoku_tiles(filename : str, save : bool = False, name : int = 6) -> Non
         for j in range(1,10):
             cropImg : np.ndarray = img[(i-1)*72+DELTA:i*72-DELTA, (j-1)*72+DELTA:j*72-DELTA]
             if save:
-                cv2.imwrite("{}_{}.png".format(name,k),cropImg)
+                cv2.imwrite("Tiles\\{}_{}.png".format(name,k),cropImg)
             k += 1
 def get_sudoku_tiles_predefined(filename : str, predef: NDArray[np.int64], save : bool = False, rep: int = 1) -> None:
     '''Gets sudoku tiles from image and saves them into correct directory.

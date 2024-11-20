@@ -41,6 +41,7 @@ class Model:
                 self.solution = SudokuIP(array).solve()
                 toc: float = time.perf_counter()
         return self.solution, toc-tic
+    
     def scan(self) -> List[np.int64]:
         """Scan sudoku and read tiles with neural network.
         
@@ -51,16 +52,20 @@ class Model:
         get_sudoku_tiles('Sudoku.png', name="scan", save=True) # Crop sudoku to many tiles
         sudoku_array: List[Any] = []
         for i in range(81): # Load every tile to array
-            sudoku_tile = cv2.resize(cv2.imread(f"scan_{i}.png", cv2.IMREAD_GRAYSCALE), (IMG_SIZE, IMG_SIZE))
+            sudoku_tile: NDArray[np.float64] = cv2.resize(cv2.imread(f"Tiles\\scan_{i}.png", cv2.IMREAD_GRAYSCALE), (IMG_SIZE, IMG_SIZE))
             sudoku_array.append(sudoku_tile.reshape(-1, IMG_SIZE, IMG_SIZE, 1))
         sudoku_grid: List[Any] = []
         for scan in sudoku_array:
+            if np.sum(scan == 255) > 600:
+                sudoku_grid.append([1,0,0,0,0,0,0,0,0,0])
+                continue
             sudoku_grid.append(self.model.predict(scan)) # Predict which tile each one is
-        scan_grid = []     
+        scan_grid: List[np.int64] = []     
         for line in sudoku_grid:
-            number = np.where(line[0]>0.5)[0][0] # Connect prediction with value
+            number: np.int64 = np.where(line[0]>0.5)[0][0] # Connect prediction with value
             scan_grid.append(number)
         return scan_grid
+    
     def load(self, entry: str) -> NDArray[np.float64]:
         """Get predefined sudoku or its solution
 
@@ -72,7 +77,7 @@ class Model:
         """
         if str(entry).lower() == "debug": # Special debug option to return solved sudoku
             sudoku_id = np.random.randint(0,99999)
-            sudoku = self.predefined_sudoku[(sudoku_id)%len(self.predefined_sudoku)]
+            sudoku: NDArray[np.float64] = self.predefined_sudoku[(sudoku_id)%len(self.predefined_sudoku)]
             sudoku = np.reshape(sudoku, (9,9))
             sudoku_IP = SudokuIP(sudoku)
             return sudoku_IP.solve()
@@ -80,7 +85,7 @@ class Model:
         sudoku_id: int = int(entry) 
         return self.predefined_sudoku[(sudoku_id+1)%len(self.predefined_sudoku)]
 
-def main():
+def main() -> None:
     model = Model()
     print(model.scan())
 if __name__ == "__main__":

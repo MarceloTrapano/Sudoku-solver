@@ -4,17 +4,28 @@ import numpy as np
 import pulp as plp
 from scipy.optimize._optimize import OptimizeResult
 from abc import ABC, abstractmethod
-from time import time
 
 class Sudoku(ABC):
+    """Abstract class representing sudoku problem.
+    """
     def __init__(self, puzzle: NDArray[np.float64]) -> None:
-        self.puzzle: NDArray[np.float64] = puzzle.reshape(9, 9)
-        self.unknown: int = np.count_nonzero(self.puzzle == 0)
+        self.puzzle: NDArray[np.float64] = puzzle.reshape(9, 9) # Reshape to grid
+        self.unknown: int = np.count_nonzero(self.puzzle == 0) # Count amount of unknowns
     @abstractmethod
     def solve(self) -> NDArray[np.float64]:
+        """Solve sudoku.
+
+        Returns:
+            NDArray[np.float64]: Solution.
+        """
         pass
 
     def __repr__(self) -> str:
+        """String representation of class.
+
+        Returns:
+            str: Sudoku grid.
+        """
         text: str = "|-------|-------|-------|\n"
         j: int = 0
         p: int = 0
@@ -36,7 +47,15 @@ class Sudoku(ABC):
         return text
 
 def check(sudoku: Sudoku) -> bool:
-    for i in sudoku.puzzle:
+    """Check if sudoku is valid.
+
+    Args:
+        sudoku (Sudoku): Sudoku grid as class.
+
+    Returns:
+        bool: 1-Correct sudoku, 0-Invalid sudoku.
+    """
+    for i in sudoku.puzzle: # Check every row
         array = list(range(1,10))
         for j in i:
             if j == 0:
@@ -45,7 +64,7 @@ def check(sudoku: Sudoku) -> bool:
                 array.remove(j)
             except ValueError:
                 return False
-    for i in np.transpose(sudoku.puzzle):
+    for i in np.transpose(sudoku.puzzle): # Check every column
         array = list(range(1,10))
         for j in i:
             if j == 0:
@@ -54,7 +73,7 @@ def check(sudoku: Sudoku) -> bool:
                 array.remove(j)
             except ValueError:
                 return False
-    for i in np.arange(0, 9, 3):
+    for i in np.arange(0, 9, 3): # Check every box
          for j in np.arange(0, 9, 3):
             array = list(range(1,10))
             for m in sudoku.puzzle[i:i+3,j:j+3]:
@@ -71,17 +90,26 @@ def check(sudoku: Sudoku) -> bool:
 
 class SudokuBruteForce(Sudoku):
     def solve(self) -> NDArray[np.float64]:
+        """Solve sudoku with backtracking.
+
+        Raises:
+            ValueError: Sudoku is not correct.
+            ValueError: Index k exceeded bounds.
+
+        Returns:
+            NDArray[np.float64]: solution.
+        """
         if not check(self):
             raise ValueError
-        if self.unknown == 0:
+        if self.unknown == 0: # Sudoku is solved
             return self.puzzle
-        x: int = 0
+        x: int = 0 # Row of sudoku
         puzzle: NDArray[np.float64] = np.copy(self.puzzle)
         for i in self.puzzle:
-            y: int = 0
+            y: int = 0 # Column of sudoku
             for j in i:
                 if j == 0:
-                    for k in range(1, 10):
+                    for k in range(1, 10): # Try every number until get solution
                         puzzle[x, y] = k
                         sudoku: self = SudokuBruteForce(puzzle) 
                         try:
@@ -97,6 +125,14 @@ class SudokuBruteForce(Sudoku):
         
 class SudokuLP(Sudoku):
     def solve(self) -> NDArray[np.float64]:
+        """Solve sudoku with linear programming.
+
+        Raises:
+            ValueError: Sudoku is invalid.
+
+        Returns:
+            NDArray[np.float64]: solution.
+        """
         if not check(self):
             raise ValueError
         if self.unknown == 0:
@@ -182,7 +218,7 @@ class SudokuLP(Sudoku):
                         x += 1
                     A_eq = np.vstack((A_eq, equation))
                     b_eq = np.append(b_eq, b)    
-        res: OptimizeResult = linprog(np.zeros(self.unknown), A_eq=A_eq, b_eq=b_eq, method='highs', bounds=(1,9))
+        res: OptimizeResult = linprog(np.ones(self.unknown), A_eq=A_eq, b_eq=b_eq, method='highs', bounds=(1,9))
         puzzle = np.copy(self.puzzle)
         print(res)
         puzzle[puzzle == 0] = res['x']
